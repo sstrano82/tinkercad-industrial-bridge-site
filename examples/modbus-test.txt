@@ -1,0 +1,81 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Salvatore Strano
+// This Arduino starter sketch is licensed separately from the proprietary bridge.
+
+/*
+ * ============================================================================
+ * Tinkercad Industrial Bridge - Test Rapido Modbus TCP
+ * Salvatore Strano © 2026
+ * ============================================================================
+ *
+ * Mappatura Automatica Modbus generata dal Bridge:
+ *  - Coil / Discrete Input 0 : fioStart    (Input da Arduino -> Factory I/O legge)
+ *  - Coil / Discrete Input 1 : fioConveyor (Output da Factory I/O -> Arduino accende LED 13)
+ *  - Holding / Input Reg 0   : fioCounter  (Registro da Arduino -> Factory I/O legge valore)
+ *
+ * Non richiede componenti esterni: usa il LED integrato sul Pin 13 
+ * e il Pin 2 in modalità INPUT_PULLUP (basta toccarlo con GND).
+ */
+
+#define PIN_BUTTON   2   // Pulsante su Pin 2 (INPUT_PULLUP)
+#define PIN_LED     13   // LED integrato sulla scheda Arduino Uno
+
+bool prevButtonState = false;
+int counter = 0;
+unsigned long lastCounterTime = 0;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PIN_BUTTON, INPUT_PULLUP);
+  pinMode(PIN_LED, OUTPUT);
+  digitalWrite(PIN_LED, LOW);
+
+  // Breve warmup per permettere all'estensione di agganciare il monitor seriale
+  delay(1500);
+
+  // Inizializzazione delle variabili sul Server Modbus
+  Serial.println("fioStart:false");
+  Serial.println("fioConveyor:false");
+  Serial.println("fioCounter:0");
+}
+
+void loop() {
+  // 1. LETTURA INGRESSO DIGITALE (Coil 0 / Input 0)
+  // Con INPUT_PULLUP: LOW = Premuto/Attivo, HIGH = Rilasciato
+  bool currentButton = (digitalRead(PIN_BUTTON) == LOW);
+  if (currentButton != prevButtonState) {
+    prevButtonState = currentButton;
+    Serial.print("fioStart:");
+    Serial.println(currentButton ? "true" : "false");
+  }
+
+  // 2. INCREMENTO ANALOGICO PERIODICO (Holding Register 0) ogni 2 secondi
+  if (millis() - lastCounterTime >= 2000) {
+    lastCounterTime = millis();
+    counter++;
+    if (counter > 9999) counter = 0;
+    Serial.print("fioCounter:");
+    Serial.println(counter);
+  }
+
+  // 3. RICEZIONE COMANDI DA MODBUS / FACTORY I/O (Coil 1 -> LED 13)
+  // Il Bridge inoltra i comandi ad Arduino con il terminatore pipe '|'
+  while (Serial.available() > 0) {
+    String message = Serial.readStringUntil('|');
+    message.trim();
+
+    int colonIndex = message.indexOf(':');
+    if (colonIndex > 0) {
+      String tagName = message.substring(0, colonIndex);
+      String tagValue = message.substring(colonIndex + 1);
+
+      if (tagName == "fioConveyor") {
+        if (tagValue == "true" || tagValue == "1" || tagValue == "HIGH") {
+          digitalWrite(PIN_LED, HIGH); // LED 13 acceso
+        } else {
+          digitalWrite(PIN_LED, LOW);  // LED 13 spento
+        }
+      }
+    }
+  }
+}

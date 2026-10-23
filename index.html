@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Connect Tinkercad Circuits to industrial automation and digital-twin tools with Tinkercad Industrial Bridge."
+    >
+    <meta name="theme-color" content="#101820">
+    <title>Tinkercad Industrial Bridge | OPC UA &amp; Modbus TCP</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #101820;
+        color: #edf4f5;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        --muted: #a7b8bf;
+        --panel: #17242c;
+        --line: #2b3a42;
+        --accent: #56e0c1;
+        --blue: #78baff;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 320px; line-height: 1.6; }
+      a { color: var(--accent); text-underline-offset: 4px; }
+      a:hover { color: #a1f4e1; }
+      .wrap { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+      header { border-bottom: 1px solid var(--line); }
+      .nav { min-height: 74px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+      .brand { color: #edf4f5; font-weight: 750; letter-spacing: .01em; text-decoration: none; }
+      .nav-links { display: flex; flex-wrap: wrap; gap: 22px; }
+      .nav-links a { color: var(--muted); font-size: .92rem; text-decoration: none; }
+      .hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; padding: 84px 0 76px; }
+      .eyebrow { color: var(--accent); font-size: .78rem; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+      h1 { max-width: 700px; margin: 14px 0 18px; font-size: clamp(2.6rem, 6vw, 4.7rem); line-height: 1.04; letter-spacing: -.055em; }
+      h2 { margin: 0 0 14px; font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.15; letter-spacing: -.035em; }
+      h3 { margin: 0 0 8px; font-size: 1.1rem; }
+      p { margin: 0 0 14px; }
+      .lead { max-width: 640px; color: #c0cdd1; font-size: 1.12rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+      .button { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; padding: 10px 17px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: #0b1c1a; font-weight: 750; text-decoration: none; }
+      .button.secondary { background: transparent; color: var(--accent); }
+      .diagram { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 18px; background: #121e25; box-shadow: 0 24px 70px #0005; }
+      section { padding: 68px 0; border-top: 1px solid var(--line); }
+      .section-intro { max-width: 720px; color: var(--muted); }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+      .card { padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+      .card p, .muted { color: var(--muted); }
+      .tag { display: inline-block; margin-bottom: 13px; padding: 3px 9px; border: 1px solid #37675f; border-radius: 999px; color: var(--accent); font-size: .76rem; font-weight: 700; }
+      .sample-list { display: grid; gap: 14px; margin-top: 26px; }
+      .sample { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+      .sample p { margin: 3px 0 0; color: var(--muted); }
+      .sample a { flex: 0 0 auto; }
+      .notice { padding: 20px 22px; border: 1px solid #354d58; border-radius: 12px; background: #14232b; color: var(--muted); }
+      .plans { align-items: stretch; }
+      .plan-name { color: var(--blue); font-weight: 750; }
+      .price { margin: 10px 0; color: var(--muted); font-size: .92rem; }
+      footer { padding: 28px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+      footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+      @media (max-width: 760px) {
+        .hero { grid-template-columns: 1fr; gap: 32px; padding: 58px 0; }
+        .grid { grid-template-columns: 1fr; }
+        .nav { align-items: flex-start; flex-direction: column; justify-content: center; padding: 16px 0; }
+        .nav-links { gap: 14px; }
+        .sample { align-items: flex-start; flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap nav">
+        <a class="brand" href="#top">Tinkercad Industrial Bridge</a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="#features">Features</a>
+          <a href="#examples">Examples</a>
+          <a href="#plans">Plans</a>
+          <a href="#demo">Demo</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <div class="wrap hero">
+        <div>
+          <div class="eyebrow">OPC UA · Modbus TCP · Digital Twins</div>
+          <h1>Bring Tinkercad Circuits into the industrial world.</h1>
+          <p class="lead">
+            Tinkercad Industrial Bridge connects Arduino circuits simulated in your browser
+            with automation and digital-twin tools through standard industrial protocols.
+          </p>
+          <div class="actions">
+            <a class="button" href="#examples">Explore sample projects</a>
+            <a class="button secondary" href="#demo">See the demo</a>
+          </div>
+        </div>
+        <svg class="diagram" viewBox="0 0 620 390" role="img" aria-labelledby="diagram-title diagram-desc">
+          <title id="diagram-title">Tinkercad Industrial Bridge system overview</title>
+          <desc id="diagram-desc">A simulated Arduino circuit connects through a browser extension and local bridge to OPC UA and Modbus TCP clients.</desc>
+          <defs>
+            <linearGradient id="glow" x1="0" x2="1">
+              <stop offset="0" stop-color="#56e0c1" stop-opacity=".2"/>
+              <stop offset="1" stop-color="#78baff" stop-opacity=".18"/>
+            </linearGradient>
+          </defs>
+          <rect x="1" y="1" width="618" height="388" rx="18" fill="url(#glow)"/>
+          <text x="32" y="42" fill="#a7b8bf" font-size="13" font-family="system-ui">SIMULATION TO AUTOMATION</text>
+          <g font-family="system-ui" text-anchor="middle">
+            <rect x="32" y="104" width="156" height="178" rx="14" fill="#17242c" stroke="#3b555e"/>
+            <text x="110" y="146" fill="#56e0c1" font-size="14" font-weight="700">TINKERCAD</text>
+            <text x="110" y="177" fill="#edf4f5" font-size="15">Arduino circuit</text>
+            <text x="110" y="204" fill="#a7b8bf" font-size="12">Sensors · actuators</text>
+            <text x="110" y="226" fill="#a7b8bf" font-size="12">Serial data</text>
+            <rect x="232" y="104" width="156" height="178" rx="14" fill="#17242c" stroke="#3b555e"/>
+            <text x="310" y="146" fill="#56e0c1" font-size="14" font-weight="700">LOCAL BRIDGE</text>
+            <text x="310" y="177" fill="#edf4f5" font-size="15">Browser extension</text>
+            <text x="310" y="201" fill="#edf4f5" font-size="15">+ Node.js server</text>
+            <text x="310" y="232" fill="#a7b8bf" font-size="12">Live tag mapping</text>
+            <rect x="432" y="86" width="156" height="94" rx="14" fill="#17242c" stroke="#3b555e"/>
+            <text x="510" y="124" fill="#78baff" font-size="14" font-weight="700">OPC UA</text>
+            <text x="510" y="150" fill="#a7b8bf" font-size="12">SCADA · CODESYS</text>
+            <rect x="432" y="206" width="156" height="94" rx="14" fill="#17242c" stroke="#3b555e"/>
+            <text x="510" y="244" fill="#78baff" font-size="14" font-weight="700">MODBUS TCP</text>
+            <text x="510" y="270" fill="#a7b8bf" font-size="12">Factory I/O · PLC</text>
+            <path d="M188 190h36m164 0h28v-57h16m-16 57v63h16" fill="none" stroke="#56e0c1" stroke-width="3"/>
+            <path d="m216 184 8 6-8 6m198-49 8-8-8-8m0 126 8-8-8-8" fill="none" stroke="#56e0c1" stroke-width="3"/>
+          </g>
+        </svg>
+      </div>
+
+      <section id="features">
+        <div class="wrap">
+          <div class="eyebrow">What it does</div>
+          <h2>Test industrial integrations with a browser-based circuit.</h2>
+          <p class="section-intro">
+            Use a simulated Arduino as a source of live tags for automation software,
+            training exercises, and digital-twin experiments.
+          </p>
+          <div class="grid">
+            <article class="card">
+              <span class="tag">OPC UA</span>
+              <h3>Expose circuit variables</h3>
+              <p>Map serial values to OPC UA nodes for monitoring and control from compatible clients.</p>
+            </article>
+            <article class="card">
+              <span class="tag">MODBUS TCP</span>
+              <h3>Connect to Modbus clients</h3>
+              <p>Map circuit tags to Modbus coils and registers for industrial simulations.</p>
+            </article>
+            <article class="card">
+              <span class="tag">LOCAL SOFTWARE</span>
+              <h3>Keep the bridge on your machine</h3>
+              <p>A browser extension works with a local Node.js bridge to relay circuit data.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="examples">
+        <div class="wrap">
+          <div class="eyebrow">Try the examples</div>
+          <h2>Sample circuits and Arduino sketches</h2>
+          <p class="section-intro">
+            Open a sample circuit in Tinkercad or download the corresponding Arduino sketch.
+            The example sketches are available under the MIT License; this does not apply to
+            the commercial bridge software.
+          </p>
+          <p class="muted"><a href="examples/LICENSE">Read the Arduino examples license</a></p>
+          <div class="sample-list">
+            <article class="sample">
+              <div>
+                <h3>OPC UA · Basic circuit</h3>
+                <p>Starter circuit with a small set of input and output tags.</p>
+              </div>
+              <div class="actions">
+                <a href="https://www.tinkercad.com/things/aKf3eZ2Rruq-tinkercad-opc-ua-versione-base">Open circuit</a>
+              </div>
+            </article>
+            <article class="sample">
+              <div>
+                <h3>OPC UA · Advanced circuit</h3>
+                <p>Advanced multi-tag example for Factory I/O and SCADA experiments.</p>
+              </div>
+              <div class="actions">
+                <a href="https://www.tinkercad.com/things/50vPMTakbSV-tinkercad-opc-ua-versione-profull">Open circuit</a>
+                <a href="examples/opc-ua-main.txt" download>Download Arduino sketch</a>
+              </div>
+            </article>
+            <article class="sample">
+              <div>
+                <h3>Modbus TCP · Test circuit</h3>
+                <p>Example with a button, LED, and counter tags.</p>
+              </div>
+              <div class="actions">
+                <a href="https://www.tinkercad.com/things/0cSBlvg6XdX-tinkercad-modbus-tcp-serverslave">Open circuit</a>
+                <a href="examples/modbus-test.txt" download>Download Arduino sketch</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="plans">
+        <div class="wrap">
+          <div class="eyebrow">Licensing</div>
+          <h2>Choose the level that fits your project.</h2>
+          <p class="section-intro">
+            The bridge is proprietary commercial software. Paid licenses are for one seat;
+            the bridge source code is not included. The downloadable Arduino example sketches
+            are separate and are available under the MIT License.
+          </p>
+          <div class="grid plans">
+            <article class="card">
+              <div class="plan-name">Free</div>
+              <div class="price">Free tier</div>
+              <p>Up to 3 OPC UA nodes.</p>
+            </article>
+            <article class="card">
+              <div class="plan-name">Pro</div>
+              <div class="price">Pricing to be announced</div>
+              <p>Up to 10 OPC UA nodes.</p>
+            </article>
+            <article class="card">
+              <div class="plan-name">Full</div>
+              <div class="price">Pricing to be announced</div>
+              <p>Unlimited nodes and Modbus TCP support.</p>
+            </article>
+          </div>
+          <p class="muted" style="margin-top: 16px">
+            Paid plans and checkout are not yet available. License terms will be provided before purchase.
+          </p>
+        </div>
+      </section>
+
+      <section id="demo">
+        <div class="wrap">
+          <div class="eyebrow">Product demo</div>
+          <h2>See the bridge in action</h2>
+          <div class="notice">
+            A demonstration video is being prepared. In the meantime, use the sample circuits above
+            to explore the project. A video can be added here when it is ready.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <span>Tinkercad Industrial Bridge · Created by Salvatore Strano</span>
+        <a href="https://github.com/sstrano82">GitHub profile</a>
+      </div>
+    </footer>
+  </body>
+</html>

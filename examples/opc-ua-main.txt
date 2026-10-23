@@ -1,0 +1,255 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Salvatore Strano
+// This Arduino starter sketch is licensed separately from the proprietary bridge.
+
+/* Progetto per la comunicazione tra Tinkercad
+   ed un server OPC UA
+*/
+
+/***************************************************************/
+
+/* Configurazione Hardware Arduino */
+#define PIN_LAMP_STOP	5
+#define PIN_LAMP_START	7
+#define PIN_CONVEYOR	6
+
+#define PIN_PUL_START	3
+#define PIN_PUL_STOP	2
+#define PIN_PUL_RESET	4
+
+/* Altre Costanti */
+#define TASK		1		//task esecuzione loop
+#define BAUD_RATE	115200	//velocita comunicazione seriale
+#define WARMUP		2000	//tempo di avvio per reset manuale nodi
+
+
+/* Struttura dati OPC UA dei Nodi (non toccare!) */
+typedef struct
+{
+  String label;//stringa label del tag
+  String value;//stringa valore del tag  
+} Node;
+
+/*               Prototipi funzioni per OPC UA (non toccare!)                        */
+void createNode(Node *inTableNodes, int numInput, Node *outTableNodes, int numOutput);
+void updateNode(Node *inTableNodes, int numInput, Node *outTableNodes, int numOutput);
+void syncOutputNodes();
+/*************************************************************************************/
+
+/* Configurazione TAGS (ITEM) OPC UA */
+enum InputTags{
+  				fioSensor,		//id0
+ 				  fioStart,		//id1
+  				fioStop,		//id2
+  				fioReset,		//id3
+  				numInput		//max tag in input(non toccare)
+};
+enum OutputTags{
+  				fioLampStart,	//id0
+  				fioLampStop,	//id1
+  				fioLampReset,	//id2
+  				fioConveyor,	//id3
+  				fioDisplay,		//id4
+  				numOutput		//max tag in output(non toccare)
+};
+
+/*          Dichiarazione struttura dati per nodi opc ua                */
+//                                    tag           label     value
+Node inputNodeTable[numInput] = { [fioSensor] = {"fioSensor", "false"},
+    							                [fioStart]  = {"fioStart",	 "false"},
+                      			      [fioStop]   = {"fioStop",   "false"},
+                      			      [fioReset]  = {"fioReset",  "false"}
+								                };
+//                                    tag             label        value
+Node outNodeTable[numOutput]  = { [fioLampStart] = {"fioLampStart", "LOW"},
+                      			      [fioLampStop]  = {"fioLampStop",  "HIGH"},
+                      			      [fioLampReset] = {"fioLampReset", "LOW"},
+                      			      [fioConveyor]  = {"fioConveyor",  "LOW"},
+  								                [fioDisplay]   = {"fioDisplay",   "0"}
+								                };
+/**************************************************************************/
+
+/* Variabili Globali Programma (Stato di processo) */
+bool pStart = false;
+bool pStop = false;
+bool pReset = false;
+bool sensor = false;
+
+bool lampStop = true;
+bool lampStart = false;
+bool lampReset = false;
+bool conveyor = false;
+int cntPezzi = 0;
+
+void setup()
+{
+  Serial.begin(BAUD_RATE);
+  delay(WARMUP);
+  createNode(inputNodeTable, numInput, outNodeTable, numOutput);
+  
+  pinMode(PIN_PUL_START, INPUT);
+  pinMode(PIN_PUL_STOP, INPUT);
+  pinMode(PIN_PUL_RESET, INPUT);
+  pinMode(PIN_LAMP_STOP, OUTPUT);  
+  pinMode(PIN_LAMP_START, OUTPUT);
+  pinMode(PIN_CONVEYOR, OUTPUT);
+  digitalWrite(PIN_LAMP_STOP, LOW);
+  digitalWrite(PIN_LAMP_START, LOW);
+  digitalWrite(PIN_CONVEYOR, LOW);
+}
+
+void loop()
+{
+  readInput();						// 1. Leggi ingressi (Hardware + OPC UA)
+  
+  core();							// 2. Logica di controllo pura
+
+  writeOutput();					// 3. Scrivi uscite hardware fisiche
+  
+  syncOutputNodes();				// 4. Mappatura automatica Variabili -> Tabella Nodi OPC UA
+  
+  updateNode(inputNodeTable, numInput, outNodeTable, numOutput); // 5. Invio/Ricezione Seriale
+
+  delay(TASK);						// attesa per Tinkercad
+}
+
+/* 1. Mappatura Ingressi */
+void readInput()
+{
+  pStart = digitalRead(PIN_PUL_START) || inputNodeTable[fioStart].value.equals("true");
+  pStop  = digitalRead(PIN_PUL_STOP)  || !inputNodeTable[fioStop].value.equals("true"); // NC
+  pReset = digitalRead(PIN_PUL_RESET) || inputNodeTable[fioReset].value.equals("true");
+  sensor = inputNodeTable[fioSensor].value.equals("true");
+}
+
+/* 2. Logica Applicativa (Libera da riferimenti a tabelle o stringhe) */
+void core()
+{
+  static int stato = 0;
+  switch(stato)
+  {
+    case 0:
+      lampStop = true;
+      lampStart = false;
+      conveyor = false;
+      cntPezzi = 0;
+      
+      if(pStart)
+      {
+        stato = 10;
+      }
+      break;
+
+    case 10:
+      lampStop = false;
+      lampStart = true;
+      conveyor = true;
+      
+      if(pStop)
+      {
+        stato = 0;
+      }
+      if(pReset)
+      {
+        cntPezzi = 0;
+      }
+      if(sensor)
+      {
+        cntPezzi++;
+        stato = 11;
+      }
+      break;
+
+    case 11:
+      if(!sensor)
+      {
+        stato = 10;
+      }
+      break;
+  }
+}
+
+/* 3. Scrittura Pin Fisici Hardware */
+void writeOutput()
+{
+  digitalWrite(PIN_LAMP_STOP, lampStop);
+  digitalWrite(PIN_CONVEYOR, conveyor);
+  digitalWrite(PIN_LAMP_START, lampStart);
+}
+
+/* 4. Sincronizzazione Centralizzata: Variabili -> Tabella OPC UA */
+void syncOutputNodes()
+{
+  outNodeTable[fioLampStart].value = lampStart ? "HIGH" : "LOW";
+  outNodeTable[fioLampStop].value  = lampStop  ? "HIGH" : "LOW";
+  outNodeTable[fioLampReset].value = lampReset ? "HIGH" : "LOW";
+  outNodeTable[fioConveyor].value  = conveyor  ? "HIGH" : "LOW";
+  outNodeTable[fioDisplay].value   = String(cntPezzi);
+}
+
+/* 5. Funzione per creare i nodi attraverso la seriale virtuale (non toccare) */
+void createNode(Node *inTableNodes, int numInput, Node *outTableNodes, int numOutput)
+{
+  String buffer = "";
+  
+  for(int i = 0; i < numInput; i++)
+  {
+    buffer = inTableNodes[i].label + ":" + inTableNodes[i].value;
+    Serial.println(buffer);
+    delay(25);
+  }
+  for(int i = 0; i < numOutput; i++)
+  {
+    buffer = outTableNodes[i].label + ":" + outTableNodes[i].value;
+    Serial.println(buffer);
+    delay(25);
+  }
+}
+
+/* Funzione per aggiornare i nodi attraverso la seriale virtuale (non toccare) */
+void updateNode(Node *inTableNodes, int numInput, Node *outTableNodes, int numOutput)
+{  
+  static String bufferOut = "";	
+  static String bufferInput = ""; 
+  static unsigned long mTime = 0;
+  static int index = 0;
+
+  // Scrittura nodi aggiornati sulla seriale a rotazione
+  if(millis() - mTime >= 25)
+  {
+    bufferOut = outTableNodes[index].label + ":" + outTableNodes[index].value;
+    Serial.println(bufferOut);
+    index++;
+    if(index >= numOutput)
+    {
+      index = 0;
+    }
+    mTime = millis();
+  }
+
+  // Lettura nodi aggiornati dalla seriale
+  if(Serial.available())
+  {
+    char ch = Serial.read();
+    
+    if(ch != '|')
+    {
+      bufferInput = bufferInput + ch; // concateno la stringa 
+    }
+    else
+    {
+      int colonIndex = bufferInput.indexOf(':'); // cerco indice del carattere di split
+      String label = bufferInput.substring(0, colonIndex); // preparo la label
+      String value = bufferInput.substring(colonIndex + 1); // preparo il valore
+      bufferInput = "";
+      
+      for(int i = 0; i < numInput; i++)
+      {
+        if(inTableNodes[i].label == label) // cerco nodo da aggiornare
+        {
+          inTableNodes[i].value = value;
+        }
+      }
+    }
+  }
+}
