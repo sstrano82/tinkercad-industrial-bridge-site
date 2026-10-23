@@ -2,8 +2,15 @@
 // Copyright (c) 2026 Salvatore Strano
 // This Arduino starter sketch is licensed separately from the proprietary bridge.
 
-/* Progetto per la comunicazione tra Tinkercad
-   ed un server OPC UA
+/* 	Progetto Arduino Uno <---> OPC UA
+*	per la comunicazione tra Tinkercad ed un server OPC UA
+*	Permette la creazione dinamica dei nodi (ITEMS) 
+*	configurando la struttura dati. Scaricare l'estensione
+*	Tinkercad Industrial Bridge per collegare Tinkercad al 
+*	server OPC UA. Si rimanda alla guida pubblicata su GitHub.
+*	Autore: Salvatore Strano © 2026
+*	Data:   23/10/2026
+*	Rel.:   1.0.0
 */
 
 /***************************************************************/
