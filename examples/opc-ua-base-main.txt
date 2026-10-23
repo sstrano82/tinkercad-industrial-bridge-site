@@ -1,0 +1,129 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Salvatore Strano
+// This Arduino starter sketch is licensed separately from the proprietary bridge.
+
+/*
+ * ============================================================================
+ * Tinkercad Industrial Bridge - Test OPC UA BASE
+ * Salvatore Strano © 2026
+ * Rel.: 1.0
+ * Data: 23/10/2026
+ * ============================================================================
+ *
+ * Mappatura Automatica OPC UA generata dal Bridge:
+ *  Nodo1: fioStart
+ *  Nodo2: fioStop     
+ *  Nodo3: fioConveyor 
+ */
+
+/* Configurazione Hardware */
+
+#define PIN_PUL_START	3
+#define PIN_PUL_STOP	2
+#define PIN_CONVEYOR    4
+
+/* Variabili Globali Programma */
+bool pStart = false;
+bool pStop = false;
+bool conveyor = false;
+String fioStart[2] = {"fioStart", "false"};
+String fioStop[2] = {"fioStop", "false"};
+String fioConveyor[2] = {"fioConveyor", "LOW"};
+
+void setup() 
+{
+  Serial.begin(115200);
+  pinMode(PIN_PUL_START, INPUT);
+  pinMode(PIN_PUL_STOP, INPUT);
+  pinMode(PIN_CONVEYOR, OUTPUT);
+  digitalWrite(PIN_CONVEYOR, LOW);
+
+
+  // Creazione dinamica delle variabili sul Server OPC UA (nodi)
+  Serial.println("fioStart:false");
+  Serial.println("fioStop:false");
+  Serial.println("fioConveyor:false");
+  delay(2000);//warmup 
+}
+
+void loop() 
+{
+  readInput();
+
+  core();
+
+  writeOutput();
+
+  updateNode();
+
+  delay(1);
+}
+
+void readInput()
+{
+  pStart = digitalRead(PIN_PUL_START) || fioStart[1].equals("true");
+  pStop = digitalRead(PIN_PUL_STOP) || !fioStop[1].equals("true");
+}
+
+void core()
+{
+  static int stato = 0;
+  switch(stato)
+  {
+    case 0://ARRESTO
+    conveyor = LOW;
+    if(pStart)
+    {
+      stato = 10;
+    }
+    break;
+    case 10://MARCIA
+    conveyor = HIGH;
+    if(pStop)
+    {
+      stato = 0;
+    }
+    break;
+  }
+}
+
+void writeOutput()
+{
+  digitalWrite(PIN_CONVEYOR, conveyor);
+  fioConveyor[1] = conveyor ? "HIGH": "LOW";
+}
+
+void updateNode()
+{
+  static unsigned long previousTime = 0;
+  if(millis() - previousTime >= 250)
+  {
+    Serial.print(fioConveyor[0]);
+    Serial.print(":");
+    Serial.println(fioConveyor[1]);
+    previousTime = millis();
+  }
+  while (Serial.available())
+  {
+    String message = Serial.readStringUntil('|');
+    message.trim();
+
+    int colonIndex = message.indexOf(':');
+    if (colonIndex > 0)
+    {
+      String tagName = message.substring(0, colonIndex);
+      String tagValue = message.substring(colonIndex + 1);
+      if(tagName == fioStart[0])
+      {
+        fioStart[1] = tagValue;      
+      }
+      else
+      {
+        if(tagName == fioStop[0])
+        {
+          fioStop[1] = tagValue;      
+        }
+      }
+    }
+  }
+}
