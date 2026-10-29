@@ -28,10 +28,10 @@
     a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
     a:hover { color: #34d399; }
 
-    .wrap { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    .wrap { width: min(1200px, calc(100% - 40px)); margin: 0 auto; }
 
     /* Navigation */
-    header { background: rgba(9, 13, 22, 0.85); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
+    header { background: rgba(9, 13, 22, 0.88); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
     .nav { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
     .brand { display: flex; align-items: center; gap: 12px; color: var(--text); font-weight: 700; font-size: 1.15rem; text-decoration: none; }
     .brand img { width: 32px; height: 32px; border-radius: 6px; }
@@ -59,17 +59,28 @@
 
     /* Sections */
     section { padding: 80px 0; border-top: 1px solid var(--line); }
-    .section-head { text-align: center; max-width: 760px; margin: 0 auto 52px; }
+    .section-head { text-align: center; max-width: 780px; margin: 0 auto 52px; }
     .section-eyebrow { color: var(--accent); font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
     .section-title { font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 700; letter-spacing: -0.03em; margin-bottom: 12px; }
     .section-desc { font-size: 1.05rem; color: var(--muted); }
 
-    /* Showcase grid */
-    .showcase-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px; display: flex; flex-direction: column; }
-    .feature-icon { font-size: 1.8rem; margin-bottom: 16px; }
-    .feature-card h3 { font-size: 1.25rem; margin-bottom: 10px; font-weight: 600; }
-    .feature-card p { color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+    /* Video Showcase */
+    .video-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; max-width: 960px; margin: 0 auto; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+    .video-wrapper { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; border: 1px solid #334155; margin-bottom: 20px; }
+    .video-wrapper video { width: 100%; height: auto; display: block; border-radius: 12px; }
+    .video-caption { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .video-badge { background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; }
+
+    /* UI Tour / Screenshots Gallery */
+    .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px; }
+    .gallery-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; }
+    .gallery-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .gallery-media { background: #0b111e; padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: center; min-height: 280px; }
+    .gallery-media img { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .gallery-body { padding: 22px; }
+    .gallery-tag { display: inline-block; font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--blue); background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 3px 8px; border-radius: 4px; margin-bottom: 10px; }
+    .gallery-body h3 { font-size: 1.25rem; margin-bottom: 8px; font-weight: 700; }
+    .gallery-body p { color: var(--muted); font-size: 0.94rem; line-height: 1.6; }
 
     /* Product UI Spotlight */
     .spotlight { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 36px; display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: center; margin-top: 48px; }
@@ -78,13 +89,6 @@
     .spotlight-info p { color: var(--muted); margin-bottom: 18px; font-size: 1rem; }
     .pill-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .pill { background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: var(--blue); padding: 4px 10px; border-radius: 6px; font-size: 0.82rem; font-family: monospace; }
-
-    /* Video & Demo Section */
-    .video-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 960px; margin: 0 auto; text-align: center; }
-    .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #334155; background: #000; margin-bottom: 20px; }
-    .video-wrapper iframe, .video-wrapper video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
-    .video-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #131d2e 0%, #090d16 100%); color: var(--muted); }
-    .video-play-btn { width: 68px; height: 68px; border-radius: 50%; background: var(--accent); color: #062b1f; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 14px; box-shadow: 0 0 25px rgba(16, 185, 129, 0.4); cursor: pointer; border: none; }
 
     /* Configuration Tabs & Guides */
     .config-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 36px; }
@@ -150,7 +154,7 @@
 
     @media (max-width: 820px) {
       .hero { grid-template-columns: 1fr; gap: 36px; padding: 48px 0; }
-      .pricing-grid, .showcase-grid, .config-grid, .faq-grid { grid-template-columns: 1fr; }
+      .pricing-grid, .gallery-grid, .config-grid, .faq-grid { grid-template-columns: 1fr; }
       .spotlight { grid-template-columns: 1fr; }
       .footer-grid { grid-template-columns: 1fr 1fr; }
       .sample-row { flex-direction: column; align-items: flex-start; }
@@ -167,9 +171,9 @@
         <span>Tinkercad Industrial Bridge</span>
       </a>
       <nav class="nav-links">
-        <a href="#features">Features</a>
-        <a href="#demo">Demo &amp; Setup</a>
-        <a href="#server">Windows App</a>
+        <a href="#demo">Live Demo</a>
+        <a href="#gallery">Interface Tour</a>
+        <a href="#server">Windows Server</a>
         <a href="#examples">Examples</a>
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
@@ -189,7 +193,7 @@
         </p>
         <div class="hero-actions">
           <a class="button" href="#pricing">Get Started Free</a>
-          <a class="button secondary" href="#demo">Watch Demo &amp; Setup</a>
+          <a class="button secondary" href="#demo">Watch Live Demo Video</a>
         </div>
         <div class="guarantee-note">
           <span>🛡️ 14-Day Money-Back Guarantee</span> &middot; <span>Single-Seat &amp; School Lab Packs</span>
@@ -249,57 +253,97 @@
       </div>
     </div>
 
-    <!-- Core Features Section -->
-    <section id="features">
+    <!-- Live Video Demonstration Section -->
+    <section id="demo">
       <div class="wrap">
         <div class="section-head">
-          <div class="section-eyebrow">Enterprise Integration</div>
-          <h2 class="section-title">Industrial Protocols Directly in your Browser</h2>
-          <p class="section-desc">Designed for automation engineers, technical high schools (ITIS), universities, and makers to simulate digital twins and PLC programs with zero physical wiring.</p>
+          <div class="section-eyebrow">Real-Time Simulation</div>
+          <h2 class="section-title">See the Bridge in Action with Factory I/O</h2>
+          <p class="section-desc">Watch a complete digital twin session: Arduino logic simulated in Tinkercad driving real 3D conveyors, optical sensors, and pushbuttons inside Factory I/O.</p>
         </div>
 
-        <div class="showcase-grid">
-          <div class="feature-card">
-            <div class="feature-icon">🌐</div>
-            <h3>OPC UA Server (IEC 62541)</h3>
-            <p>Embedded standard OPC UA Server listening on port 4840. Exposes virtual Arduino variables as industrial nodes under the <code>FactoryIO_Device</code> root for automatic driver discovery.</p>
+        <div class="video-container">
+          <div class="video-wrapper">
+            <video controls autoplay muted loop playsinline poster="assets/server-tray-ui.png">
+              <source src="assets/videos/Tinkercad-FactoryIO.mp4" type="video/mp4">
+              <source src="assets/videos/demo.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          <div class="video-caption">
+            <div>
+              <h3 style="font-size: 1.2rem; margin-bottom: 4px;">Tinkercad Circuits &harr; Factory I/O Live Integration</h3>
+              <p style="color: var(--muted); font-size: 0.92rem;">Simultaneous reading of virtual inputs and actuation of industrial digital twin equipment at zero latency.</p>
+            </div>
+            <span class="video-badge">100% Real-Time Simulation</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Product Screenshots & Interface Tour -->
+    <section id="gallery">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">Product Tour</div>
+          <h2 class="section-title">Clean, Responsive &amp; Intuitive Controls</h2>
+          <p class="section-desc">Inspect how the browser extension and desktop server work together to provide real-time tag inspection and instant license activation.</p>
+        </div>
+
+        <div class="gallery-grid">
+          <!-- Card 1: Free Tier -->
+          <div class="gallery-card">
+            <div class="gallery-media">
+              <img src="assets/images/version-free.png" alt="Tinkercad Industrial Bridge Free Tier Interface">
+            </div>
+            <div class="gallery-body">
+              <span class="gallery-tag">Free Starter</span>
+              <h3>Starter Tag Monitoring</h3>
+              <p>Monitor up to 3 OPC UA tags with live values, floating status badge injected in Tinkercad, and real-time serial link feedback.</p>
+            </div>
           </div>
 
-          <div class="feature-card">
-            <div class="feature-icon">🏭</div>
-            <h3>Modbus TCP Server</h3>
-            <p>High-speed industrial Modbus TCP server on port 502/8502. Native mapping of Discrete Inputs, Coils, Input Registers, and Holding Registers for Factory I/O drivers.</p>
+          <!-- Card 2: Full Unlimited Tier -->
+          <div class="gallery-card">
+            <div class="gallery-media">
+              <img src="assets/images/version-full.png" alt="Tinkercad Industrial Bridge Full Tier Interface">
+            </div>
+            <div class="gallery-body">
+              <span class="gallery-tag">Full Tier</span>
+              <h3>Unlimited Multi-Tag Automation</h3>
+              <p>Handle complex assemblies with unlimited digital and analog tags. Includes piece counters, lamp indicators, and 7-segment display registers.</p>
+            </div>
           </div>
 
-          <div class="feature-card">
-            <div class="feature-icon">🔌</div>
-            <h3>Manifest V3 Extension</h3>
-            <p>Modern browser extension with an injected floating badge in Tinkercad Circuits. Real-time status indicator, live tag monitor, and one-click node resetting.</p>
+          <!-- Card 3: Modbus TCP Mode -->
+          <div class="gallery-card">
+            <div class="gallery-media">
+              <img src="assets/images/version-modbus.png" alt="Tinkercad Industrial Bridge Modbus TCP Mode">
+            </div>
+            <div class="gallery-body">
+              <span class="gallery-tag" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.1);">Modbus TCP</span>
+              <h3>Native Modbus Coils &amp; Registers</h3>
+              <p>Automatic dynamic allocation of Discrete Inputs (1xxxx), Coils (0xxxx), Input Registers (3xxxx), and Holding Registers (4xxxx) for standard PLC drivers.</p>
+            </div>
           </div>
 
-          <div class="feature-card">
-            <div class="feature-icon">⚡</div>
-            <h3>Dynamic Tag Instantiation</h3>
-            <p>No configuration files required: simply send <code>TagName:Value</code> on Arduino's serial monitor and the OPC UA node or Modbus address is instantiated instantly on the fly.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon">🎮</div>
-            <h3>Digital Twins in Factory I/O</h3>
-            <p>Connect your virtual conveyor belts, sensors, pushbuttons, and sorting stations in Factory I/O directly to your Arduino code running in Autodesk Tinkercad.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon">🛡️</div>
-            <h3>Zero Latency Throttling Optimization</h3>
-            <p>Built with non-blocking event loops and pipe terminators to prevent browser background throttling and ensure millisecond-level responsiveness.</p>
+          <!-- Card 4: Lemon Squeezy Activation -->
+          <div class="gallery-card">
+            <div class="gallery-media">
+              <img src="assets/images/activation.png" alt="Tinkercad Industrial Bridge License Activation">
+            </div>
+            <div class="gallery-body">
+              <span class="gallery-tag" style="color: var(--accent); border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">Lemon Squeezy</span>
+              <h3>Instant In-App License Activation</h3>
+              <p>Activate your Pro or Full license key with one click directly inside the extension popup. Instant unlock with zero restart required.</p>
+            </div>
           </div>
         </div>
 
         <!-- Spotlight: Windows Standalone Server App -->
         <div id="server" class="spotlight">
           <div>
-            <div class="section-eyebrow">Zero Configuration</div>
+            <div class="section-eyebrow">Zero Setup Required</div>
             <h3>Windows Standalone Desktop App with System Tray</h3>
             <p>No terminal commands, no Node.js installation required for end users. Download the standalone <code>.exe</code>, double-click, and control everything right from your Windows Taskbar:</p>
             <ul class="feature-list" style="margin-bottom: 20px;">
@@ -322,29 +366,15 @@
       </div>
     </section>
 
-    <!-- Demo & Configuration Guides Section -->
-    <section id="demo">
+    <!-- Configuration Guides Section -->
+    <section id="config">
       <div class="wrap">
         <div class="section-head">
-          <div class="section-eyebrow">Video &amp; Documentation</div>
-          <h2 class="section-title">See the Bridge in Action &amp; Quick Setup</h2>
-          <p class="section-desc">Watch our live demo walkthrough and follow the step-by-step configuration guides for Factory I/O, CODESYS, and Tinkercad Circuits.</p>
+          <div class="section-eyebrow">Quick Setup Guides</div>
+          <h2 class="section-title">Connect Any Industrial Client in Minutes</h2>
+          <p class="section-desc">Follow these concise step-by-step configurations for Factory I/O, CODESYS, and Tinkercad Circuits.</p>
         </div>
 
-        <!-- Video Player Showcase -->
-        <div class="video-container">
-          <div class="video-wrapper">
-            <!-- If a demo video file is uploaded to assets/videos/demo.mp4 or YouTube embed -->
-            <video controls poster="assets/server-tray-ui.png" style="width: 100%; height: 100%;">
-              <source src="assets/videos/demo.mp4" type="video/mp4">
-              Your browser does not support the video tag.
-            </video>
-          </div>
-          <h3 style="margin-bottom: 8px;">Tinkercad Circuits &harr; Factory I/O Real-Time Data Exchange</h3>
-          <p style="color: var(--muted); font-size: 0.95rem;">Demonstration of bidirectional conveyor belt sorting control using virtual Arduino I/O mapped to OPC UA nodes.</p>
-        </div>
-
-        <!-- Step-by-Step Configuration Guides -->
         <div class="config-grid">
           <!-- Guide 1: Factory I/O OPC UA -->
           <div class="config-card">
@@ -592,8 +622,8 @@
         <div class="footer-links">
           <h5>Product</h5>
           <ul>
-            <li><a href="#features">Features</a></li>
-            <li><a href="#demo">Demo &amp; Setup</a></li>
+            <li><a href="#demo">Live Demo Video</a></li>
+            <li><a href="#gallery">Interface Tour</a></li>
             <li><a href="#server">Windows Server App</a></li>
             <li><a href="#pricing">Pricing Plans</a></li>
             <li><a href="#examples">Sample Sketches</a></li>
