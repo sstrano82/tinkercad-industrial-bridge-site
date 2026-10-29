@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy | Tinkercad Industrial Bridge</title>
+  <meta name="description" content="Privacy Policy for Tinkercad Industrial Bridge extension and desktop software.">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" type="image/png" href="assets/icon32.png">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #10b981;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 840px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px 40px;
+    }
+    h1 { color: var(--accent); margin-top: 0; font-size: 2rem; }
+    h2 { color: #e2e8f0; margin-top: 28px; font-size: 1.3rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    p, li { color: var(--muted); font-size: 0.98rem; }
+    ul { padding-left: 20px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .back { display: inline-block; margin-bottom: 20px; font-weight: 500; }
+    footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back">&larr; Back to Home</a>
+    <h1>Privacy Policy</h1>
+    <p><em>Last updated: October 29, 2026</em></p>
+
+    <p>This Privacy Policy describes how <strong>Tinkercad Industrial Bridge</strong> ("we", "our", or "the software"), developed by <strong>Salvatore Strano</strong>, handles information when you use our browser extension and desktop server applications.</p>
+
+    <h2>1. Data Collection and Privacy by Design</h2>
+    <p>We believe in absolute data privacy. <strong>Tinkercad Industrial Bridge does not collect, track, store, or sell any personal data, browsing activity, or circuit designs.</strong></p>
+    <ul>
+      <li><strong>Local Communication:</strong> All data exchanged between Autodesk Tinkercad Circuits, the browser extension, and the desktop server occurs strictly on your local machine (<code>localhost</code>: ports 8080, 4840, and 502/8502). No circuit telemetry, tag names, or serial values are ever transmitted to any remote cloud server.</li>
+      <li><strong>No Analytics or Trackers:</strong> The extension and server contain zero third-party tracking scripts, analytics cookies, or behavioral monitoring tools.</li>
+    </ul>
+
+    <h2>2. License Activation and Payment Processing</h2>
+    <p>Payments and license key validation are handled securely by our Merchant of Record, <strong>Lemon Squeezy</strong> (Lemon Squeezy, LLC):</p>
+    <ul>
+      <li>When you purchase a Pro or Full license, payment information (credit card, PayPal, billing address) is processed directly by Lemon Squeezy under their <a href="https://www.lemonsqueezy.com/privacy" target="_blank" rel="noopener">Privacy Policy</a>. We never see or store your payment details.</li>
+      <li>When activating a license key in the software, the software contacts Lemon Squeezy's API (<code>api.lemonsqueezy.com</code>) to verify the validity of your license key and register an anonymous instance ID to prevent unauthorized reuse across multiple machines.</li>
+    </ul>
+
+    <h2>3. Browser Permissions Explained</h2>
+    <p>Our browser extension requests minimal permissions strictly necessary for its functionality:</p>
+    <ul>
+      <li><code>storage</code>: To locally save user preferences (such as WebSocket URL and activated license key) within your browser.</li>
+      <li><code>activeTab / host_permissions</code>: Limited solely to <code>https://www.tinkercad.com/things/*/editel*</code> in order to display the bridge status badge and interact with Tinkercad's serial monitor DOM.</li>
+    </ul>
+
+    <h2>4. GDPR & CCPA Compliance</h2>
+    <p>Because we do not collect or store personal data on our own servers, we comply by design with the General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA). For any questions regarding your Lemon Squeezy transaction records, you may exercise your rights through Lemon Squeezy or contact us.</p>
+
+    <h2>5. Contact Us</h2>
+    <p>If you have any questions or concerns regarding this Privacy Policy, please contact:</p>
+    <p>
+      <strong>Developer:</strong> Salvatore Strano<br>
+      <strong>Email:</strong> <a href="mailto:salvatorestrano82@gmail.com">salvatorestrano82@gmail.com</a><br>
+      <strong>Website:</strong> <a href="https://sstrano82.github.io/tinkercad-industrial-bridge-site/">https://sstrano82.github.io/tinkercad-industrial-bridge-site/</a>
+    </p>
+
+    <footer>
+      &copy; 2026 Salvatore Strano. All rights reserved.
+    </footer>
+  </div>
+</body>
+</html>
