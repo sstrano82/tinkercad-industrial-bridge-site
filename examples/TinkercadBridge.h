@@ -40,6 +40,8 @@ private:
   int tagCount;
   unsigned long lastSyncTime;
   unsigned long syncIntervalMs;
+  unsigned long lastForceSyncTime;
+  unsigned long forceSyncIntervalMs;
   int currentOutIndex;
   String rxBuffer;
 
@@ -47,7 +49,9 @@ public:
   TinkercadBridge() {
     tagCount = 0;
     lastSyncTime = 0;
-    syncIntervalMs = 25; // 25ms tra un tag e l'altro (frequenza ottimale)
+    syncIntervalMs = 25;       // 25ms tra un tag e l'altro (frequenza ottimale)
+    lastForceSyncTime = 0;
+    forceSyncIntervalMs = 5000; // Ogni 5s rinvia forzatamente tutti gli output (safety net)
     currentOutIndex = 0;
     rxBuffer = "";
   }
@@ -122,6 +126,10 @@ public:
     addInput(tagName, String(initialValue, decimals).c_str());
   }
 
+  void addInput(const char* tagName, double initialValue, int decimals = 2) {
+    addInput(tagName, String(initialValue, decimals).c_str());
+  }
+
   /**
    * SCRITTURA VALORI (Arduino invia al Server industriale)
    */
@@ -179,6 +187,9 @@ public:
   /**
    * AGGIORNAMENTO CICLICO (Da inserire nel loop principale)
    * Gestisce sia l'invio rotativo non-bloccante che la ricezione immediata di comandi.
+   * OTTIMIZZAZIONE: invia solo i tag effettivamente modificati dall'ultima trasmissione.
+   * SICUREZZA: ogni forceSyncIntervalMs (default 5s) forza il reinvio di tutti gli output,
+   *            così il server si riallinea anche in caso di perdita messaggi.
    */
   void update() {
     // 1. RICEZIONE COMANDI IN INGRESSO (terminati da '|')
@@ -192,15 +203,20 @@ public:
       }
     }
 
-    // 2. TRASMISSIONE OUTPUT (Round-Robin non bloccante)
+    // 2. FORCE SYNC PERIODICO (safety net: rimarca tutti gli output come "da inviare")
+    if (millis() - lastForceSyncTime >= forceSyncIntervalMs) {
+      lastForceSyncTime = millis();
+      markAllOutputChanged();
+    }
+
+    // 3. TRASMISSIONE OUTPUT (Round-Robin non bloccante, solo tag con isChanged == true)
     if (millis() - lastSyncTime >= syncIntervalMs) {
       lastSyncTime = millis();
 
       if (tagCount > 0) {
-        // Cerca il prossimo tag di OUTPUT da sincronizzare
         int attempts = 0;
         while (attempts < tagCount) {
-          if (tags[currentOutIndex].type == TAG_OUTPUT) {
+          if (tags[currentOutIndex].type == TAG_OUTPUT && tags[currentOutIndex].isChanged) {
             Serial.print(tags[currentOutIndex].name);
             Serial.print(":");
             Serial.println(tags[currentOutIndex].value);
@@ -236,6 +252,14 @@ private:
       int idx = findTagIndex(name.c_str());
       if (idx >= 0) {
         tags[idx].value = val;
+      }
+    }
+  }
+
+  void markAllOutputChanged() {
+    for (int i = 0; i < tagCount; i++) {
+      if (tags[i].type == TAG_OUTPUT) {
+        tags[i].isChanged = true;
       }
     }
   }
