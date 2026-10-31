@@ -1,0 +1,227 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Salvatore Strano
+// Tinkercad Industrial Bridge - Template con Libreria Helper Semplificata
+
+/*
+ ==============================================================================
+   TINKERCAD INDUSTRIAL BRIDGE - ESEMPIO SEMPLIFICATO CON CLASSE HELPER
+   Autore: Salvatore Strano © 2026
+ ==============================================================================
+
+ Con questa libreria incorporata non devi gestire manualmente le stringhe seriali,
+ i buffer o i delay. Ti basta:
+  1. Dichiarare i tag in setup() con bridge.addInput() e bridge.addOutput().
+  2. Leggere con bridge.readBool("nomeTag") o scrivere con bridge.write("nomeTag", valore).
+  3. Chiamare bridge.update() nel loop().
+*/
+
+// ============================================================================
+// 1. LIBRERIA HELPER TINKERCAD BRIDGE (Inclusa direttamente nello sketch)
+// ============================================================================
+#define MAX_BRIDGE_TAGS 16
+
+class TinkercadBridge {
+public:
+  enum TagType { TAG_OUTPUT, TAG_INPUT };
+  struct Tag {
+    const char* name;
+    String value;
+    TagType type;
+  };
+
+private:
+  Tag tags[MAX_BRIDGE_TAGS];
+  int tagCount;
+  unsigned long lastSyncTime;
+  int currentOutIndex;
+  String rxBuffer;
+
+public:
+  TinkercadBridge() : tagCount(0), lastSyncTime(0), currentOutIndex(0), rxBuffer("") {}
+
+  void addOutput(const char* name, const char* initial = "false") {
+    if (tagCount < MAX_BRIDGE_TAGS) {
+      tags[tagCount++] = { name, String(initial), TAG_OUTPUT };
+    }
+  }
+
+  void addOutput(const char* name, bool initial) {
+    addOutput(name, initial ? "true" : "false");
+  }
+
+  void addOutput(const char* name, int initial) {
+    addOutput(name, String(initial).c_str());
+  }
+
+  void addInput(const char* name, const char* initial = "false") {
+    if (tagCount < MAX_BRIDGE_TAGS) {
+      tags[tagCount++] = { name, String(initial), TAG_INPUT };
+    }
+  }
+
+  void addInput(const char* name, bool initial) {
+    addInput(name, initial ? "true" : "false");
+  }
+
+  void begin(unsigned long baud = 115200, unsigned long warmupMs = 1500) {
+    Serial.begin(baud);
+    delay(warmupMs);
+    // Annuncio nodi iniziali al bridge
+    for (int i = 0; i < tagCount; i++) {
+      Serial.print(tags[i].name);
+      Serial.print(":");
+      Serial.println(tags[i].value);
+      delay(20);
+    }
+  }
+
+  void write(const char* name, const String& val) {
+    int idx = find(name);
+    if (idx >= 0) tags[idx].value = val;
+  }
+
+  void write(const char* name, bool val) {
+    write(name, val ? "true" : "false");
+  }
+
+  void write(const char* name, int val) {
+    write(name, String(val));
+  }
+
+  bool readBool(const char* name) {
+    int idx = find(name);
+    if (idx < 0) return false;
+    String v = tags[idx].value;
+    v.toLowerCase();
+    return (v == "true" || v == "high" || v == "1");
+  }
+
+  int readInt(const char* name) {
+    int idx = find(name);
+    return (idx >= 0) ? tags[idx].value.toInt() : 0;
+  }
+
+  String readString(const char* name) {
+    int idx = find(name);
+    return (idx >= 0) ? tags[idx].value : "";
+  }
+
+  void update() {
+    // Ricezione comandi in ingresso con delimitatore '|'
+    while (Serial.available() > 0) {
+      char ch = (char)Serial.read();
+      if (ch != '|') {
+        rxBuffer += ch;
+      } else {
+        int colon = rxBuffer.indexOf(':');
+        if (colon > 0) {
+          String n = rxBuffer.substring(0, colon);
+          String v = rxBuffer.substring(colon + 1);
+          n.trim(); v.trim();
+          int idx = find(n.c_str());
+          if (idx >= 0) tags[idx].value = v;
+        }
+        rxBuffer = "";
+      }
+    }
+
+    // Trasmissione output round-robin non bloccante ogni 25ms
+    if (millis() - lastSyncTime >= 25 && tagCount > 0) {
+      lastSyncTime = millis();
+      int checks = 0;
+      while (checks < tagCount) {
+        if (tags[currentOutIndex].type == TAG_OUTPUT) {
+          Serial.print(tags[currentOutIndex].name);
+          Serial.print(":");
+          Serial.println(tags[currentOutIndex].value);
+          currentOutIndex = (currentOutIndex + 1) % tagCount;
+          break;
+        }
+        currentOutIndex = (currentOutIndex + 1) % tagCount;
+        checks++;
+      }
+    }
+  }
+
+private:
+  int find(const char* name) {
+    for (int i = 0; i < tagCount; i++) {
+      if (strcmp(tags[i].name, name) == 0) return i;
+    }
+    return -1;
+  }
+};
+
+
+// ============================================================================
+// 2. CODICE UTENTE (Semplicissimo e intuitivo!)
+// ============================================================================
+
+// Pin Arduino fisici per pulsanti e attuatori su Tinkercad
+#define PIN_BUTTON_START 3
+#define PIN_BUTTON_STOP  2
+#define PIN_CONVEYOR_LED 4
+
+// Istanza della libreria Bridge
+TinkercadBridge bridge;
+
+int pieceCounter = 0;
+unsigned long lastCounterTime = 0;
+
+void setup() {
+  pinMode(PIN_BUTTON_START, INPUT);
+  pinMode(PIN_BUTTON_STOP, INPUT);
+  pinMode(PIN_CONVEYOR_LED, OUTPUT);
+
+  // 1. REGISTRAZIONE TAG DI INPUT (Comandi da Factory I/O / CODESYS / SCADA)
+  bridge.addInput("fioStart", false);   // Pulsante di Marcia virtuale
+  bridge.addInput("fioStop", false);    // Pulsante di Arresto virtuale
+  bridge.addInput("fioReset", false);   // Pulsante di Reset virtuale
+
+  // 2. REGISTRAZIONE TAG DI OUTPUT (Dati da Arduino verso il Digital Twin)
+  bridge.addOutput("fioConveyor", false); // Nastro trasportatore / Motore
+  bridge.addOutput("fioLampStart", false);// Spia verde marcia
+  bridge.addOutput("fioPieceCount", 0);   // Conteggio pezzi (Analogico / Registro)
+
+  // 3. AVVIO DELLA COMUNICAZIONE
+  bridge.begin(115200);
+}
+
+void loop() {
+  // A. LETTURA INGRESSI (Combinazione tra pulsanti fisici di Tinkercad e tag virtuali)
+  bool startCmd = digitalRead(PIN_BUTTON_START) || bridge.readBool("fioStart");
+  bool stopCmd  = digitalRead(PIN_BUTTON_STOP)  || bridge.readBool("fioStop");
+  bool resetCmd = bridge.readBool("fioReset");
+
+  // B. LOGICA DI CONTROLLO (Esempio nastro marcia/arresto)
+  static bool running = false;
+
+  if (startCmd && !stopCmd) {
+    running = true;
+  } else if (stopCmd) {
+    running = false;
+  }
+
+  if (resetCmd) {
+    pieceCounter = 0;
+  }
+
+  // Simulazione conteggio pezzi mentre il nastro è in marcia
+  if (running && millis() - lastCounterTime >= 1500) {
+    lastCounterTime = millis();
+    pieceCounter++;
+  }
+
+  // C. ATTUAZIONE PIN HARDWARE SU TINKERCAD
+  digitalWrite(PIN_CONVEYOR_LED, running ? HIGH : LOW);
+
+  // D. AGGIORNAMENTO TAG VERSO FACTORY I/O / CODESYS
+  bridge.write("fioConveyor", running);
+  bridge.write("fioLampStart", running);
+  bridge.write("fioPieceCount", pieceCounter);
+
+  // E. SINCRONIZZAZIONE AUTOMATICA DEL BRIDGE (Non dimenticarlo!)
+  bridge.update();
+
+  delay(5);
+}
