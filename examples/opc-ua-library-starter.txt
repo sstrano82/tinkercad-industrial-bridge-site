@@ -53,6 +53,14 @@ public:
     addOutput(name, String(initial).c_str());
   }
 
+  void addOutput(const char* name, float initial, int decimals = 2) {
+    addOutput(name, String(initial, decimals).c_str());
+  }
+
+  void addOutput(const char* name, double initial, int decimals = 2) {
+    addOutput(name, String(initial, decimals).c_str());
+  }
+
   void addInput(const char* name, const char* initial = "false") {
     if (tagCount < MAX_BRIDGE_TAGS) {
       tags[tagCount++] = { name, String(initial), TAG_INPUT };
@@ -61,6 +69,14 @@ public:
 
   void addInput(const char* name, bool initial) {
     addInput(name, initial ? "true" : "false");
+  }
+
+  void addInput(const char* name, int initial) {
+    addInput(name, String(initial).c_str());
+  }
+
+  void addInput(const char* name, float initial, int decimals = 2) {
+    addInput(name, String(initial, decimals).c_str());
   }
 
   void begin(unsigned long baud = 115200, unsigned long warmupMs = 1500) {
@@ -88,6 +104,14 @@ public:
     write(name, String(val));
   }
 
+  void write(const char* name, float val, int decimals = 2) {
+    write(name, String(val, decimals));
+  }
+
+  void write(const char* name, double val, int decimals = 2) {
+    write(name, String(val, decimals));
+  }
+
   bool readBool(const char* name) {
     int idx = find(name);
     if (idx < 0) return false;
@@ -99,6 +123,16 @@ public:
   int readInt(const char* name) {
     int idx = find(name);
     return (idx >= 0) ? tags[idx].value.toInt() : 0;
+  }
+
+  float readFloat(const char* name) {
+    int idx = find(name);
+    return (idx >= 0) ? tags[idx].value.toFloat() : 0.0f;
+  }
+
+  double readDouble(const char* name) {
+    int idx = find(name);
+    return (idx >= 0) ? tags[idx].value.toDouble() : 0.0;
   }
 
   String readString(const char* name) {
@@ -174,14 +208,16 @@ void setup() {
   pinMode(PIN_CONVEYOR_LED, OUTPUT);
 
   // 1. REGISTRAZIONE TAG DI INPUT (Comandi da Factory I/O / CODESYS / SCADA)
-  bridge.addInput("fioStart", false);   // Pulsante di Marcia virtuale
-  bridge.addInput("fioStop", false);    // Pulsante di Arresto virtuale
-  bridge.addInput("fioReset", false);   // Pulsante di Reset virtuale
+  bridge.addInput("fioStart", false);     // Pulsante di Marcia virtuale (Bool)
+  bridge.addInput("fioStop", false);      // Pulsante di Arresto virtuale (Bool)
+  bridge.addInput("fioReset", false);     // Pulsante di Reset virtuale (Bool)
+  bridge.addInput("fioSpeedSet", 2.5f);   // Setpoint velocità da SCADA (Float)
 
   // 2. REGISTRAZIONE TAG DI OUTPUT (Dati da Arduino verso il Digital Twin)
-  bridge.addOutput("fioConveyor", false); // Nastro trasportatore / Motore
-  bridge.addOutput("fioLampStart", false);// Spia verde marcia
-  bridge.addOutput("fioPieceCount", 0);   // Conteggio pezzi (Analogico / Registro)
+  bridge.addOutput("fioConveyor", false); // Nastro trasportatore / Motore (Bool)
+  bridge.addOutput("fioLampStart", false);// Spia verde marcia (Bool)
+  bridge.addOutput("fioPieceCount", 0);   // Conteggio pezzi (Intero)
+  bridge.addOutput("fioTemp", 24.5f);     // Temperatura simulata sensore (Float)
 
   // 3. AVVIO DELLA COMUNICAZIONE
   bridge.begin(115200);
@@ -220,8 +256,14 @@ void loop() {
   bridge.write("fioLampStart", running);
   bridge.write("fioPieceCount", pieceCounter);
 
+  // Esempio lettura float da SCADA e scrittura float sensore analogico
+  float speed = bridge.readFloat("fioSpeedSet"); // Lettura Setpoint Float
+  float simTemperature = 25.0f + (running ? 3.8f : 0.0f);
+  bridge.write("fioTemp", simTemperature, 2);    // Invio misura Float a 2 decimali
+
   // E. SINCRONIZZAZIONE AUTOMATICA DEL BRIDGE (Non dimenticarlo!)
   bridge.update();
 
   delay(5);
 }
+

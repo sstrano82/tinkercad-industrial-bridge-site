@@ -90,6 +90,14 @@ public:
     addOutput(tagName, String(initialValue).c_str());
   }
 
+  void addOutput(const char* tagName, float initialValue, int decimals = 2) {
+    addOutput(tagName, String(initialValue, decimals).c_str());
+  }
+
+  void addOutput(const char* tagName, double initialValue, int decimals = 2) {
+    addOutput(tagName, String(initialValue, decimals).c_str());
+  }
+
   /**
    * Registra un tag di INPUT (Factory I/O / CODESYS / SCADA -> Arduino)
    */
@@ -104,6 +112,14 @@ public:
 
   void addInput(const char* tagName, bool initialValue) {
     addInput(tagName, initialValue ? "true" : "false");
+  }
+
+  void addInput(const char* tagName, int initialValue) {
+    addInput(tagName, String(initialValue).c_str());
+  }
+
+  void addInput(const char* tagName, float initialValue, int decimals = 2) {
+    addInput(tagName, String(initialValue, decimals).c_str());
   }
 
   /**
@@ -128,6 +144,10 @@ public:
   }
 
   void write(const char* tagName, float val, int decimals = 2) {
+    write(tagName, String(val, decimals));
+  }
+
+  void write(const char* tagName, double val, int decimals = 2) {
     write(tagName, String(val, decimals));
   }
 
@@ -222,3 +242,4 @@ private:
 };
 
 #endif // TINKERCAD_INDUSTRIAL_BRIDGE_H
+
