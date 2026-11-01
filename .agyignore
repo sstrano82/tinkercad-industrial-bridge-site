@@ -1,0 +1,60 @@
+# ============================================================================
+# Antigravity Context & Indexing Ignore Rules
+# ============================================================================
+# Impedisce all'agente di scansionare file pesanti, binari e dipendenze,
+# riducendo drasticamente il consumo di token e velocizzando le risposte.
+
+# Dipendenze pesanti (decine di migliaia di file)
+node_modules/
+**/node_modules/
+
+# Directory di build e pacchetti generati
+dist/
+**/dist/
+dist-ssr/
+build/
+release/
+**/release/
+
+# Binari ed eseguibili
+*.exe
+*.zip
+*.crx
+*.xpi
+*.blockmap
+*.bin
+*.tar.gz
+
+# Cache, storage temporaneo e file di build Vite/Electron
+.cache/
+.vite/
+.temp/
+.tmp/
+tmp/
+*.local
+builder-debug.yml
+builder-effective-config.yaml
+
+# Risorse multimediali non leggibili via testo (audio, video, immagini pesanti)
+*.mp4
+*.webm
+*.mov
+*.png
+*.jpg
+*.jpeg
+*.ico
+*.gif
+*.woff
+*.woff2
+*.ttf
+*.eot
+
+# Certificati PKI e chiavi di crittografia OPC UA
+**/pki/
+**/PKI/
+*.pem
+*.key
+*.crt
+
+# Git internal data
+.git/
