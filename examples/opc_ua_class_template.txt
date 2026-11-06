@@ -1,0 +1,302 @@
+/* 	Tinkercad Industrial Bridge - Arduino Starter Sketch
+*	Autore: Salvatore Strano © 2026
+*	Data: 04/11/2026
+*	Rev. 1.0
+*/
+
+/* Classe TinkercadBridge */
+#define MAX_BRIDGE_TAGS 16
+
+class TinkercadBridge {
+  public:
+  enum TagType { TAG_OUTPUT, TAG_INPUT };
+  struct Tag {
+    const char* name;
+    String value;
+    TagType type;
+    bool isChanged;
+  };
+
+  private:
+  Tag tags[MAX_BRIDGE_TAGS];
+  int tagCount;
+  unsigned long lastSyncTime;
+  unsigned long syncIntervalMs;
+  unsigned long lastForceSyncTime;
+  unsigned long forceSyncIntervalMs;
+  int currentOutIndex;
+  String rxBuffer;
+
+  public:
+  TinkercadBridge() {
+    tagCount = 0;
+    lastSyncTime = 0;
+    syncIntervalMs = 25;
+    lastForceSyncTime = 0;
+    forceSyncIntervalMs = 5000;
+    currentOutIndex = 0;
+    rxBuffer = "";
+  }
+
+  void begin(unsigned long baudRate = 115200, unsigned long warmupMs = 1500) {
+    Serial.begin(baudRate);
+    delay(warmupMs);
+    for (int i = 0; i < tagCount; i++) {
+      Serial.print(tags[i].name);
+      Serial.print(":");
+      Serial.println(tags[i].value);
+      delay(20);
+    }
+  }
+
+  void addOutput(const char* name, const char* val = "false") {
+    if (tagCount >= MAX_BRIDGE_TAGS) return;
+    tags[tagCount++] = { name, String(val), TAG_OUTPUT, false };
+  }
+  void addOutput(const char* name, bool val) { addOutput(name, val ? "true" : "false"); }//overload
+  void addOutput(const char* name, int val) { addOutput(name, String(val).c_str()); }//overload
+  void addOutput(const char* name, float val, int dec = 2) { addOutput(name, String(val, dec).c_str()); }//overload
+  void addOutput(const char* name, double val, int dec = 2) { addOutput(name, String(val, dec).c_str()); }//overload
+
+  void addInput(const char* name, const char* val = "false") {
+    if (tagCount >= MAX_BRIDGE_TAGS) return;
+    tags[tagCount++] = { name, String(val), TAG_INPUT, false };
+  }
+  void addInput(const char* name, bool val) { addInput(name, val ? "true" : "false"); }//overload
+  void addInput(const char* name, int val) { addInput(name, String(val).c_str()); }//overload
+  void addInput(const char* name, float val, int dec = 2) { addInput(name, String(val, dec).c_str()); }//overload
+  void addInput(const char* name, double val, int dec = 2) { addInput(name, String(val, dec).c_str()); }//overload
+
+  void write(const char* name, const char* val) {
+    int idx = findTagIndex(name);
+    if (idx >= 0 && tags[idx].value != val) {
+      tags[idx].value = val;
+      tags[idx].isChanged = true;
+    }
+  }
+  void write(const char* name, bool val) { write(name, val ? "true" : "false"); }//overload
+  void write(const char* name, int val) { write(name, String(val).c_str()); }//overload
+  void write(const char* name, float val, int dec = 2) { write(name, String(val, dec).c_str()); }//overload
+  void write(const char* name, double val, int dec = 2) { write(name, String(val, dec).c_str()); }//overload
+
+  String readString(const char* name) {
+    int idx = findTagIndex(name);
+    return (idx >= 0) ? tags[idx].value : "";
+  }
+  bool readBool(const char* name) {
+    String val = readString(name);
+    val.toLowerCase();
+    return (val == "true" || val == "high" || val == "1");
+  }
+  int readInt(const char* name) { return readString(name).toInt(); }
+  float readFloat(const char* name) { return readString(name).toFloat(); }
+
+  void update() {
+    while (Serial.available() > 0) {
+      char ch = (char)Serial.read();
+      if (ch != '|') {
+        rxBuffer += ch;
+      } else {
+        processIncomingMessage(rxBuffer);
+        rxBuffer = "";
+      }
+    }
+
+    if (millis() - lastForceSyncTime >= forceSyncIntervalMs) {
+      lastForceSyncTime = millis();
+      markAllOutputChanged();
+    }
+
+    if (millis() - lastSyncTime >= syncIntervalMs) {
+      lastSyncTime = millis();
+      if (tagCount > 0) {
+        int attempts = 0;
+        while (attempts < tagCount) {
+          if (tags[currentOutIndex].type == TAG_OUTPUT && tags[currentOutIndex].isChanged) {
+            Serial.print(tags[currentOutIndex].name);
+            Serial.print(":");
+            Serial.println(tags[currentOutIndex].value);
+            tags[currentOutIndex].isChanged = false;
+            currentOutIndex = (currentOutIndex + 1) % tagCount;
+            break;
+          }
+          currentOutIndex = (currentOutIndex + 1) % tagCount;
+          attempts++;
+        }
+      }
+    }
+  }
+
+  private:
+  int findTagIndex(const char* name) {
+    for (int i = 0; i < tagCount; i++) {
+      if (strcmp(tags[i].name, name) == 0) return i;
+    }
+    return -1;
+  }
+
+  void processIncomingMessage(const String& msg) {
+    int colonIdx = msg.indexOf(':');
+    if (colonIdx > 0) {
+      String name = msg.substring(0, colonIdx);
+      String val = msg.substring(colonIdx + 1);
+      name.trim(); val.trim();
+      int idx = findTagIndex(name.c_str());
+      if (idx >= 0) tags[idx].value = val;
+    }
+  }
+
+  void markAllOutputChanged() {
+    for (int i = 0; i < tagCount; i++) {
+      if (tags[i].type == TAG_OUTPUT) tags[i].isChanged = true;
+    }
+  }
+};
+/* Fine Classe TinkercadBridge */
+
+// ============================================================================
+// ISTANZA E SKETCH ARDUINO
+// ============================================================================
+/* Configurazione Hardware Arduino */
+#define PIN_LAMP_STOP	5
+#define PIN_LAMP_START	6
+#define PIN_LAMP_RESET	7
+
+#define PIN_PUL_START	3
+#define PIN_PUL_STOP	2
+#define PIN_PUL_RESET	4
+
+/* Istanza Tinkercad Bridge */
+TinkercadBridge bridge;
+/* Variabili Programma */
+bool pStart = false;
+bool pStop = false;
+bool pReset = false;
+bool sensor = false;
+
+bool lampStop = true;
+bool lampStart = false;
+bool lampReset = false;
+bool conveyor = false;
+int  display = 0;
+
+void setup()
+{
+  /* Registra i tag di OUTPUT (Arduino -> Factory I/O / CODESYS) */
+  bridge.addOutput("fioDisplay", 0);
+  bridge.addOutput("fioConveyor", false);
+  bridge.addOutput("fioLampStart", false);
+  bridge.addOutput("fioLampStop", false);
+  bridge.addOutput("fioLampReset", false);
+
+  /* 2. Registra i tag di INPUT (Factory I/O / PLC -> Arduino) */
+  bridge.addInput("fioStart", false);
+  bridge.addInput("fioStop", false);
+  bridge.addInput("fioReset", false);
+  bridge.addInput("fioSensor", false);
+
+  pinMode(PIN_PUL_START, INPUT);
+  pinMode(PIN_PUL_STOP, INPUT);
+  pinMode(PIN_PUL_RESET, INPUT);
+  pinMode(PIN_LAMP_START, OUTPUT);
+  pinMode(PIN_LAMP_STOP, OUTPUT);
+  pinMode(PIN_LAMP_RESET, OUTPUT);
+
+  bridge.begin(); // Avvia la comunicazione seriale industriale
+}
+
+void loop()
+{
+  bridge.update();	// 1. Sincronizzati i tag industriali OPC UA
+
+  readInput();		// 2. Leggi ingressi (Hardware + OPC UA)
+
+  core();			// 3. Logica di controllo Impianto
+
+  writeOutput();	// 4. Scrivi uscite hardware e virtuali
+
+  delay(1);			// 5. Sincronizza con simulatore Tinkercad
+}
+
+void readInput()
+{
+  static bool oldSensor = false;
+  
+  pStart = digitalRead(PIN_PUL_START) || bridge.readBool("fioStart");//pulsante NO FIO
+  pStop  = digitalRead(PIN_PUL_STOP)  || !bridge.readBool("fioStop");//pulsante NC FIO
+  pReset = digitalRead(PIN_PUL_RESET) || bridge.readBool("fioReset");//pulsante NO FIO
+
+  sensor = bridge.readBool("fioSensor");//sensore IR FIO
+  if(sensor && !oldSensor)//fronte di salita
+  {
+    display++;
+  }
+  oldSensor = sensor;
+}
+
+void core()
+{
+  static int state = 0;
+  switch(state)
+  {
+    case 0://stato di arresto
+    lampStart = false;
+    lampStop = true;
+    lampReset = false;
+    conveyor = false;
+    if(pStart && !pStop)
+    {
+      state = 10;      
+    }  
+    else
+    {
+      if(pReset)
+      {
+        display = 0;
+      }
+    }
+    break;
+    case 10://sttao di marcia
+    lampStart = true;
+    lampStop = false;
+    lampReset = false;
+    conveyor = true;
+    if(pStop)
+    {
+      state = 0;
+    }
+    else
+    {
+      if(display >= 10)
+      {
+        state = 20;
+      }
+    }
+    break;
+    case 20://sttao di pausa fine conteggio
+    lampStart = true;
+    lampStop = false;
+    lampReset = true;
+    conveyor = false;
+    if(pReset)
+    {
+      display = 0;
+      state = 0;
+    }
+    break;
+  }
+}
+
+void writeOutput()
+{
+  /* Scrittura uscite Hardware */
+  digitalWrite(PIN_LAMP_STOP, lampStop);
+  digitalWrite(PIN_LAMP_START, lampStart);
+  digitalWrite(PIN_LAMP_RESET, lampReset);
+  /* Scrittura uscite virtuali */
+  bridge.write("fioConveyor", conveyor);
+  bridge.write("fioLampStart", lampStart);
+  bridge.write("fioLampStop", lampStop);
+  bridge.write("fioLampReset", lampReset);  
+  bridge.write("fioDisplay", display);
+}
