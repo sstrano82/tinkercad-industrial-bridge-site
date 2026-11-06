@@ -18,8 +18,9 @@
  * CARATTERISTICHE:
  * - Creazione e registrazione automatica dei nodi (Input & Output).
  * - Lettura non bloccante via Seriale con parser integrato (terminatore '|').
- * - Sincronizzazione ciclica automatica senza delay bloccanti.
- * - API moderne: bridge.readBool(), bridge.write(), bridge.readInt(), ecc.
+ * - Sincronizzazione ciclica automatica con invio su variazione (isChanged).
+ * - Force sync periodico ogni 5s per garantire l'allineamento perfetto con il server.
+ * - Supporto completo ai tipi con overload dedicati (const char*, bool, int, float, double).
  */
 
 #define MAX_BRIDGE_TAGS 16
@@ -49,7 +50,7 @@ public:
   TinkercadBridge() {
     tagCount = 0;
     lastSyncTime = 0;
-    syncIntervalMs = 25;       // 25ms tra un tag e l'altro (frequenza ottimale)
+    syncIntervalMs = 25;        // 25ms tra un tag e l'altro (frequenza ottimale)
     lastForceSyncTime = 0;
     forceSyncIntervalMs = 5000; // Ogni 5s rinvia forzatamente tutti gli output (safety net)
     currentOutIndex = 0;
@@ -77,119 +78,69 @@ public:
   /**
    * Registra un tag di OUTPUT (Arduino -> Factory I/O / CODESYS / SCADA)
    */
-  void addOutput(const char* tagName, const char* initialValue = "false") {
+  void addOutput(const char* name, const char* val = "false") {
     if (tagCount >= MAX_BRIDGE_TAGS) return;
-    tags[tagCount].name = tagName;
-    tags[tagCount].value = String(initialValue);
-    tags[tagCount].type = TAG_OUTPUT;
-    tags[tagCount].isChanged = false;
-    tagCount++;
+    tags[tagCount++] = { name, String(val), TAG_OUTPUT, false };
   }
-
-  void addOutput(const char* tagName, bool initialValue) {
-    addOutput(tagName, initialValue ? "true" : "false");
-  }
-
-  void addOutput(const char* tagName, int initialValue) {
-    addOutput(tagName, String(initialValue).c_str());
-  }
-
-  void addOutput(const char* tagName, float initialValue, int decimals = 2) {
-    addOutput(tagName, String(initialValue, decimals).c_str());
-  }
-
-  void addOutput(const char* tagName, double initialValue, int decimals = 2) {
-    addOutput(tagName, String(initialValue, decimals).c_str());
-  }
+  void addOutput(const char* name, bool val) { addOutput(name, val ? "true" : "false"); }
+  void addOutput(const char* name, int val) { addOutput(name, String(val).c_str()); }
+  void addOutput(const char* name, float val, int dec = 2) { addOutput(name, String(val, dec).c_str()); }
+  void addOutput(const char* name, double val, int dec = 2) { addOutput(name, String(val, dec).c_str()); }
 
   /**
    * Registra un tag di INPUT (Factory I/O / CODESYS / SCADA -> Arduino)
    */
-  void addInput(const char* tagName, const char* initialValue = "false") {
+  void addInput(const char* name, const char* val = "false") {
     if (tagCount >= MAX_BRIDGE_TAGS) return;
-    tags[tagCount].name = tagName;
-    tags[tagCount].value = String(initialValue);
-    tags[tagCount].type = TAG_INPUT;
-    tags[tagCount].isChanged = false;
-    tagCount++;
+    tags[tagCount++] = { name, String(val), TAG_INPUT, false };
   }
-
-  void addInput(const char* tagName, bool initialValue) {
-    addInput(tagName, initialValue ? "true" : "false");
-  }
-
-  void addInput(const char* tagName, int initialValue) {
-    addInput(tagName, String(initialValue).c_str());
-  }
-
-  void addInput(const char* tagName, float initialValue, int decimals = 2) {
-    addInput(tagName, String(initialValue, decimals).c_str());
-  }
-
-  void addInput(const char* tagName, double initialValue, int decimals = 2) {
-    addInput(tagName, String(initialValue, decimals).c_str());
-  }
+  void addInput(const char* name, bool val) { addInput(name, val ? "true" : "false"); }
+  void addInput(const char* name, int val) { addInput(name, String(val).c_str()); }
+  void addInput(const char* name, float val, int dec = 2) { addInput(name, String(val, dec).c_str()); }
+  void addInput(const char* name, double val, int dec = 2) { addInput(name, String(val, dec).c_str()); }
 
   /**
    * SCRITTURA VALORI (Arduino invia al Server industriale)
+   * Supporta costanti stringa, bool, int, float, double e oggetti String
    */
-  void write(const char* tagName, const String& val) {
-    int idx = findTagIndex(tagName);
-    if (idx >= 0) {
-      if (tags[idx].value != val) {
-        tags[idx].value = val;
-        tags[idx].isChanged = true;
-      }
+  void write(const char* name, const char* val) {
+    int idx = findTagIndex(name);
+    if (idx >= 0 && tags[idx].value != val) {
+      tags[idx].value = val;
+      tags[idx].isChanged = true;
     }
   }
-
-  void write(const char* tagName, bool val) {
-    write(tagName, val ? "true" : "false");
-  }
-
-  void write(const char* tagName, int val) {
-    write(tagName, String(val));
-  }
-
-  void write(const char* tagName, float val, int decimals = 2) {
-    write(tagName, String(val, decimals));
-  }
-
-  void write(const char* tagName, double val, int decimals = 2) {
-    write(tagName, String(val, decimals));
-  }
+  void write(const char* name, const String& val) { write(name, val.c_str()); }
+  void write(const char* name, bool val) { write(name, val ? "true" : "false"); }
+  void write(const char* name, int val) { write(name, String(val).c_str()); }
+  void write(const char* name, float val, int dec = 2) { write(name, String(val, dec).c_str()); }
+  void write(const char* name, double val, int dec = 2) { write(name, String(val, dec).c_str()); }
 
   /**
    * LETTURA VALORI (Arduino riceve da Factory I/O o PLC)
    */
-  String readString(const char* tagName) {
-    int idx = findTagIndex(tagName);
-    if (idx >= 0) {
-      return tags[idx].value;
-    }
-    return "";
+  String readString(const char* name) {
+    int idx = findTagIndex(name);
+    return (idx >= 0) ? tags[idx].value : "";
   }
 
-  bool readBool(const char* tagName) {
-    String val = readString(tagName);
+  bool readBool(const char* name) {
+    String val = readString(name);
     val.toLowerCase();
     return (val == "true" || val == "high" || val == "1");
   }
 
-  int readInt(const char* tagName) {
-    return readString(tagName).toInt();
+  int readInt(const char* name) {
+    return readString(name).toInt();
   }
 
-  float readFloat(const char* tagName) {
-    return readString(tagName).toFloat();
+  float readFloat(const char* name) {
+    return readString(name).toFloat();
   }
 
   /**
    * AGGIORNAMENTO CICLICO (Da inserire nel loop principale)
    * Gestisce sia l'invio rotativo non-bloccante che la ricezione immediata di comandi.
-   * OTTIMIZZAZIONE: invia solo i tag effettivamente modificati dall'ultima trasmissione.
-   * SICUREZZA: ogni forceSyncIntervalMs (default 5s) forza il reinvio di tutti gli output,
-   *            così il server si riallinea anche in caso di perdita messaggi.
    */
   void update() {
     // 1. RICEZIONE COMANDI IN INGRESSO (terminati da '|')
@@ -232,11 +183,9 @@ public:
   }
 
 private:
-  int findTagIndex(const char* tagName) {
+  int findTagIndex(const char* name) {
     for (int i = 0; i < tagCount; i++) {
-      if (strcmp(tags[i].name, tagName) == 0) {
-        return i;
-      }
+      if (strcmp(tags[i].name, name) == 0) return i;
     }
     return -1;
   }
@@ -266,4 +215,3 @@ private:
 };
 
 #endif // TINKERCAD_INDUSTRIAL_BRIDGE_H
-
