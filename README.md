@@ -30,4 +30,4 @@ files into the public site repository.
   embed URL; for a local video file, link to the uploaded MP4.
 
 Review the product description, pricing, Tinkercad links, and license wording before
-sharing the page with Lemon Squeezy.
+sharing the page with Gumroad.
